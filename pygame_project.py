@@ -1,6 +1,68 @@
 import pygame
 import sys
 
+class GameState:
+    def __init__(self):
+        self.score = 0
+        self.guessed_word = ''
+        self.word_to_guess = ''
+        self.current_index = 0
+        self.clicked_letters = []
+        self.available_buttons = list(range(1, 31))
+        
+        self.game_data = [
+            {"image": "q1.png", "word": "ไพธอน"},
+            {"image": "q2.png", "word": "แอปพลิเคชั่น"},
+            {"image": "q3.png", "word": "เมาส์"},
+            {"image": "q4.png", "word": "บราวเซอร์"},
+            {"image": "q5.png", "word": "เดสก์ท็อป"},
+            {"image": "q6.png", "word": "ไซเบอร์"},
+            {"image": "q7.png", "word": "ไมโครซอฟต์"},
+            {"image": "q8.png", "word": "ออนไลน์"},
+            {"image": "q9.png", "word": "แฟลชไดรฟ์"}
+        ]
+
+    def remove_button(self, number):
+        """Remove the clicked number from available buttons."""
+        if number in self.available_buttons:
+            self.available_buttons.remove(number)
+            self.clicked_letters.append(str(number))
+
+    def load_current_word(self):
+        #Load the current word and image based on current_index
+        current_data = self.game_data[self.current_index]
+        self.word_to_guess = current_data['word']
+        return current_data
+
+    def next_state(self):
+        #Move to the next word and image
+        if self.current_index < len(self.game_data) - 1:
+            self.current_index += 1
+        else:
+            #Optionally restart or end the game when the list is exhausted
+            self.current_index = 0
+
+class user_input:
+    def __init__(self):
+        self.guessed_word = ''
+        
+    def process(self, event):
+        rows = 3
+        cols = 10
+        gap = 20
+        size = 40
+        boxes = []
+        for row in range(rows):
+            for col in range(cols):
+                x = ((col * gap) + gap + (size * col))
+                y = ((row * gap) + gap + (size * row))
+                box = pygame.rect(x, y, size, size)
+                boxes.append(box)
+        letter_font = pygame.font.System('arial', 80)
+
+        for letter in words:
+            self.guessed_word += f'{letter}'
+        
 class Button:
     def __init__(self, image_path, x, y):
         # Load button image and create a rect for positioning and collision
