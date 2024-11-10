@@ -73,6 +73,9 @@ class Button:
         # Draw the button image onto the screen
         screen.blit(self.image, self.rect.topleft)
 
+    def clicked(self, event):
+        return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -83,11 +86,13 @@ class Game:
 
         self.bg_img = pygame.image.load("bg picture.png")
 
-        self.play_button = Button("play button.png", 250, 500)
+        self.play_button = Button("play button.png", 550, 500)
         self.hint_button = Button("hint button.png", 600, 500)
         self.home_button = Button("home button.png", 950, 500)
 
         self.running = True
+        self.game_state = "main"
+        self.game_data = GameState()
 
     def run(self):
         while self.running:
@@ -103,16 +108,35 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if self.game_state == 'main':
+                    if self.play_button.clicked(event):
+                        self.game_state = 'play'
+                    elif self.hint_button.clicked(event):
+                        pass
+                elif self.game_state == 'play':
+                    if self.home_button.clicked(event):
+                        self.game_state = 'main'
+
 
     def draw(self):
         # Draw background and buttons
         self.screen.blit(self.bg_img, (0, 0))
-        self.play_button.draw(self.screen)
-        self.hint_button.draw(self.screen)
+        if self.game_state == 'main':
+            self.play_button.draw(self.screen)
+        elif self.game_state == 'play':
+            self.draw_play_page()
+            
+
+    def draw_play_page(self):
+        current_data = self.game_data.load_current_word()
+        question_image = pygame.image.load(current_data['image'])
+        resized_image = pygame.transform.scale(question_image, (600, 450))
+        self.screen.blit(resized_image, (400, 100))
         self.home_button.draw(self.screen)
+
 
 # Start the game
 if __name__ == "__main__":
     game = Game()
     game.run()
-        
