@@ -1,15 +1,11 @@
 import pygame
 import sys
 
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
 class GameState:
     def __init__(self):
-        self.score = 0
-        self.guessed_word = ''
-        self.word_to_guess = ''
-        self.current_index = 0
-        self.clicked_letters = []
-        self.available_buttons = list(range(1, 31))
-        
         self.game_data = [
             {"image": "q1.png", "word": "ไพธอน"},
             {"image": "q2.png", "word": "แอปพลิเคชั่น"},
@@ -22,25 +18,94 @@ class GameState:
             {"image": "q9.png", "word": "แฟลชไดรฟ์"}
         ]
 
-    def remove_button(self, number):
-        """Remove the clicked number from available buttons."""
-        if number in self.available_buttons:
-            self.available_buttons.remove(number)
-            self.clicked_letters.append(str(number))
+        self.word_list = []
+        for i in self.game_data:
+            word = i.get(i[1])
+            self.word_list.append(word)
+            
+        self.word_to_guess = ''
+        self.current_index = 0
+        self.clicked_letters = []
+        self.available_buttons = list(range(1, 31))
+        self.word_length = len(self.word_to_guess)
+        self.guessed_word = ['_'] * self.word_length
+        
+    
 
-    def load_current_word(self):
-        #Load the current word and image based on current_index
-        current_data = self.game_data[self.current_index]
-        self.word_to_guess = current_data['word']
-        return current_data
+    def create_button(self, image_files):
+        buttons = []
+        button_width = 60
+        button_height = 60
+        x_start = 50
+        y_start = HEIGHT // 2 + 50
 
-    def next_state(self):
-        #Move to the next word and image
-        if self.current_index < len(self.game_data) - 1:
-            self.current_index += 1
+        alphabets = ['ไ','โ','แ','เ','า','อ','ส์','ส','ว','ลิ','ล','ร์','ร','ม','ฟ์','ฟ','พ','ป','บ','น์','น','ธ','ท็','ต์','ด','ซ','ชั่','ช','ค','ก์']
+        for i, letter in enumerate(alphabets):
+            image_path = f"{letter}.png"
+            if image_path in image_files:
+                image = pygame.image.load(image_path).convert_alpha()
+            rect = pygame.Rect(x_start + (i % 13) * (button_width + 10), y_start + (i // 13) * (button_height + 10), button_width, button_height)
+            buttons.append(Button(letter, rect, image))
+        return buttons
+
+    def update_word(self, letter):
+        if letter in self.word_to_guess and letter not in self.guessed_letters:
+            for i in range(self.word_length):
+                if self.word_to_guess[i] == letter:
+                    self.guessed_word[i] = letter
+            self.guessed_letters.append(letter)
         else:
-            #Optionally restart or end the game when the list is exhausted
-            self.current_index = 0
+            self.guessed_letters.append(letter)
+        if '_' not in self.guessed_word:
+            self.game_over = True
+
+    def draw_word(self):
+        word_display = ' '.join(self.guessed_word)
+        text_surface = big_font.render(word_display, True, BLACK)
+        screen.blit(text_surface, (WIDTH // 2 - text_surface.get_width() // 2, HEIGHT // 4))
+
+    def draw_buttons(self):
+        for button in self.buttons:
+            button.draw()
+
+    def handle_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
+            pos = pygame.mouse.get_pos()
+            for button in self.buttons:
+                if button.rect.collidepoint(pos):
+                    button.clicked = True  # Mark the button as clicked
+                    self.update_word(button.letter)
+                    self.buttons.remove(button)  # Remove the button from the list after clicking
+                    break
+        elif event.type == pygame.KEYDOWN and not self.game_over:
+            if event.key >= pygame.K_a and event.key <= pygame.K_z:
+                letter = chr(event.key).upper()
+                if letter not in self.guessed_letters:
+                    self.update_word(letter)
+
+    def check_game_over(self):
+        if self.game_over:
+            game_over_text = big_font.render("You guessed the word!", True, BLACK)
+            screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2 - 40))
+
+
+class Button:
+    def __init__(self, letter, rect, image):
+        self.letter = letter
+        self.rect = rect
+        self.image = image
+
+    def draw(self):
+        if self.clicked:
+            # Draw the button with a gray color to show it was clicked
+            self.image.fill(GRAY)
+        screen.blit(self.image, self.rect)  # Draw the image on the button
+        letter_text = font.render(self.letter, True, BLACK)
+        # Draw the letter on top of the image (centered)
+        screen.blit(letter_text, (self.rect.centerx - letter_text.get_width() // 2, self.rect.centery - letter_text.get_height() // 2))
+
+
+
 
 class user_input:
     def __init__(self):
@@ -127,8 +192,15 @@ class Game:
         elif self.game_state == 'play':
             self.draw_play_page()
             
-
+game = Game(word_list, image_files)
     def draw_play_page(self):
+         
+        # Draw current guessed word
+        game.draw_word()
+            
+        # Draw letter buttons
+        game.draw_buttons()
+        
         current_data = self.game_data.load_current_word()
         question_image = pygame.image.load(current_data['image'])
         resized_image = pygame.transform.scale(question_image, (600, 450))
