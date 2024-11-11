@@ -4,7 +4,7 @@ import sys
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-class Game:
+class Gamestate:
     def __init__(self):
         self.game_data = [
             {"image": "q1.png", "word": "ไพธอน"},
@@ -194,7 +194,7 @@ class Game:
             
 
     def draw_play_page(self):
-        game = Game(word_list, image_files)
+        game = Gamestate(word_list, image_files)
         # Draw current guessed word
         game.draw_word()
             
