@@ -18,15 +18,15 @@ font = pygame.font.Font(None, 36)
 class Gamestate:
     def __init__(self):
         self.game_data = [
-    {"image": "q1.png", "word": ["ไ", "พ", "ธ", "อ", "น"], "hint": "h1.png"},
-    {"image": "q2.png", "word": ["แ", "อ", "ป", "พ", "ลิ", "เ", "ค", "ชั่", "น"], "hint": "h2.png"},
-    {"image": "q3.png", "word": ["เ", "ม", "า", "ส์"], "hint": "h3.png"},
-    {"image": "q4.png", "word": ["บ", "ร", "า", "ว", "เ", "ซ", "อ", "ร์"], "hint": "h4.png"},
-    {"image": "q5.png", "word": ["เ", "ด", "ส", "ก์" , "ท็", "อ", "ป"], "hint": "h5.png"},
-    {"image": "q6.png", "word": ["ไ", "ซ", "เ", "บ", "อ", "ร์"], "hint": "h6.png"},
-    {"image": "q7.png", "word": ["ไ", "ม", "โ", "ค", "ร", "ซ", "อ", "ฟ", "ต์"], "hint": "h7.png"},
-    {"image": "q8.png", "word": ["อ", "อ", "น", "ไ", "ล", "น์"], "hint": "h8.png"},
-    {"image": "q9.png", "word": ["แ", "ฟ", "ล", "ช", "ไ", "ด", "ร", "ฟ์"], "hint": "h9.png"}
+    {"image": "q1.png", "word": ["ไ", "พ", "ธ", "อ", "น"], "hint": "h1.png","answer":"a1.jpg"},
+    {"image": "q2.png", "word": ["แ", "อ", "ป", "พ", "ลิ", "เ", "ค", "ชั่", "น"], "hint": "h2.png","answer":"a2.jpg"},
+    {"image": "q3.png", "word": ["เ", "ม", "า", "ส์"], "hint": "h3.png","answer":"a3.jpg"},
+    {"image": "q4.png", "word": ["บ", "ร", "า", "ว", "เ", "ซ", "อ", "ร์"], "hint": "h4.png","answer":"a4.jpg"},
+    {"image": "q5.png", "word": ["เ", "ด", "ส", "ก์" , "ท็", "อ", "ป"], "hint": "h5.png","answer":"a5.jpg"},
+    {"image": "q6.png", "word": ["ไ", "ซ", "เ", "บ", "อ", "ร์"], "hint": "h6.png","answer":"a6.jpg"},
+    {"image": "q7.png", "word": ["ไ", "ม", "โ", "ค", "ร", "ซ", "อ", "ฟ", "ต์"], "hint": "h7.png","answer":"a7.jpg"},
+    {"image": "q8.png", "word": ["อ", "อ", "น", "ไ", "ล", "น์"], "hint": "h8.png","answer":"a8.jpg"},
+    {"image": "q9.png", "word": ["แ", "ฟ", "ล", "ช", "ไ", "ด", "ร", "ฟ์"], "hint": "h9.png","answer":"a9.jpg"}
 ]
 
         self.current_word_index = 0
@@ -34,12 +34,14 @@ class Gamestate:
         self.word_length = len(self.word_to_guess)
         self.guessed_word = ['_'] * self.word_length
         self.clicked_letters = []
+        self.show_answer = False  # New flag to control answer image display
         self.game_over = False
         self.letter_images = {}
 
          # Preload images
         self.preloaded_images = {entry["image"]: pygame.image.load(entry["image"]) for entry in self.game_data}
         self.preloaded_hints = {entry["hint"]: pygame.image.load(entry["hint"]) for entry in self.game_data}
+        self.preloaded_answers = {entry["answer"]: pygame.image.load(entry["answer"]) for entry in self.game_data}
 
     def get_current_image(self):
         return self.preloaded_images[self.game_data[self.current_word_index]["image"]]
@@ -60,15 +62,20 @@ class Gamestate:
 
         # Check if the word is completed
         if '_' not in self.guessed_word:
-            if self.current_word_index + 1 < len(self.game_data):  # Move to the next word
-                self.current_word_index += 1
-                self.word_to_guess = self.game_data[self.current_word_index]["word"]
-                self.word_length = len(self.word_to_guess)
-                self.guessed_word = ['_'] * self.word_length
-                self.clicked_letters = []
-                self.letter_images = {}
-            else:
-                self.game_over = True  # All words have been guessed, game over
+            self.show_answer = True  # Show answer image when word is completed
+
+    def move_to_next_word(self):
+        """Transition to the next word."""
+        if self.current_word_index + 1 < len(self.game_data):
+            self.current_word_index += 1
+            self.word_to_guess = self.game_data[self.current_word_index]["word"]
+            self.word_length = len(self.word_to_guess)
+            self.guessed_word = ['_'] * self.word_length
+            self.clicked_letters = []
+            self.show_answer = False  # Reset for the next word
+            self.letter_images = {}
+        else:
+            self.game_over = True  # All words have been guessed, game over
 
     def get_hint_image(self):
         """Returns the hint image path for the current word."""
@@ -138,27 +145,26 @@ class Game:
         self.letter_buttons = self.create_buttons()
         self.show_hint = False
 
+        #Create game over page
+        self.game_over_img = pygame.image.load("game_over.jpg")  # Replace with your image path
+        self.game_over_img_rect = self.game_over_img.get_rect(center=(WIDTH // 2, HEIGHT // 2))  # Center it
+
     def create_buttons(self):
         buttons = []
         alphabets = ['ไ', 'โ', 'แ', 'เ', 'า', 'อ', 'ส์', 'ส', 'ว', 'ลิ', 'ล', 'ร์', 'ร', 'ม', 'ฟ์', 'ฟ', 'พ', 'ป', 'บ', 'น์', 'น', 'ธ', 'ท็', 'ต์', 'ด', 'ซ', 'ชั่', 'ช', 'ค', 'ก์']
-        
-        button_width, button_height = 50, 50  # Default size of the letter buttons
-        button_x, button_y = 50, HEIGHT // 2 + 50  # Initial button positions
-        horizontal_gap = 20  # Horizontal gap between buttons
-        vertical_gap = 20    # Vertical gap between rows
+        button_x, button_y = 50, HEIGHT // 2 + 100
+        button_width, button_height = 50, 50
+        gap = 20
 
-        # Create letter buttons
         for i, letter in enumerate(alphabets):
-            image_path = f"{letter}.png"  # Assuming you have letter images
-            image = pygame.image.load(image_path).convert_alpha()
-            image = pygame.transform.scale(image, (button_width, button_height))  # Resize image to 50x50 for buttons
-
-            # Calculate the position of the button with the added gap
-            x_pos = button_x + (i % 15) * (button_width + horizontal_gap)  # Horizontal gap
-            y_pos = button_y + (i // 13) * (button_height + vertical_gap)  # Vertical gap
-
-            # Create and add the button to the list
-            buttons.append(Button(letter, x_pos, y_pos, image))  # Only load image, no letter text
+            try:
+                image = pygame.image.load(f"{letter}.png").convert_alpha()
+            except FileNotFoundError:
+                print(f"Missing image: {letter}.png")
+                continue
+            x = button_x + (i % 15) * (button_width+ 10 + gap)
+            y = button_y + (i // 15) * (button_height + gap)
+            buttons.append(Button(letter, x, y, image))
 
         # Add Play and Home Buttons separately since they should not have letter text
         play_button_image = pygame.image.load("play button.png")  # Example play button image
@@ -180,24 +186,28 @@ class Game:
                 if self.game_state == "home":
                     if self.play_button.check_click(pos):
                         self.game_state = "play"  # Switch to the game screen
-                    elif self.home_button.check_click(pos):
-                        pass  # Already on the home screen, do nothing
                 elif self.game_state == "play":
-                    if self.home_button.check_click(pos):
-                        self.game_state = "home"  # Switch back to the home screen
-                    elif self.hint_button.check_click(pos):
-                        self.show_hint = not self.show_hint  # Toggle hint visibility
+                    if self.gamestate.show_answer:  # If showing answer image
+                        answer_rect = self.gamestate.preloaded_answers[
+                            self.gamestate.game_data[self.gamestate.current_word_index]["answer"]
+                        ].get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                        if answer_rect.collidepoint(pos):  # Check if clicked on answer image
+                            self.gamestate.move_to_next_word()
                     else:
-                        # Handle letter button clicks during the game
-                        for button in self.letter_buttons:
-                            if button.check_click(pos):
-                                button.on_mouse_down()  # Button pressed
-                                if button.letter not in self.gamestate.clicked_letters:
-                                    self.gamestate.update_word(button.letter)
-                                    self.show_hint = False  # Hide hint when a letter is clicked
+                        if self.home_button.check_click(pos):
+                            self.game_state = "home"
+                        elif self.hint_button.check_click(pos):
+                            self.show_hint = not self.show_hint
+                        else:
+                            for button in self.letter_buttons:
+                                if button.check_click(pos):
+                                    button.on_mouse_down()
+                                    if button.letter not in self.gamestate.clicked_letters:
+                                        self.gamestate.update_word(button.letter)
+                                        self.show_hint = False
             elif event.type == pygame.MOUSEBUTTONUP:
                 for button in self.letter_buttons:
-                    button.on_mouse_up()  # Button released
+                    button.on_mouse_up()
 
     def draw(self):
         self.screen.blit(self.bg_img, (0, 0))  # Draw background
@@ -232,13 +242,34 @@ class Game:
         if self.show_hint:
             hint_image = pygame.image.load(self.gamestate.game_data[self.gamestate.current_word_index]["hint"])
             resized_hint_image = pygame.transform.scale(hint_image, (300, 150))  # Adjust hint size as needed
-            self.screen.blit(resized_hint_image, (WIDTH // 2 - 150, HEIGHT // 4 + 200))
+            self.screen.blit(resized_hint_image, (WIDTH // 2 + 300, HEIGHT // 4 + 150))
+
+        if self.gamestate.show_answer:  # Show answer image if flag is set
+            answer_image = self.gamestate.preloaded_answers[
+                self.gamestate.game_data[self.gamestate.current_word_index]["answer"]
+            ]
+            resized_answer_image = pygame.transform.scale(answer_image, (1280, 720))  # Resize as needed
+            answer_rect = resized_answer_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            self.screen.blit(resized_answer_image, answer_rect.topleft)
 
         if self.gamestate.game_over:
-            # Show a "Game Over" message
-            message = big_font.render("You guessed all words!", True, BLACK)
-            self.screen.blit(message, (WIDTH // 2 - message.get_width() // 2, HEIGHT // 2 - 100))
+            # Show a "Game Over" image
+            self.screen.blit(self.game_over_img, self.game_over_img_rect.topleft)
 
+    def draw_next_game_page(self):
+        self.screen.fill(WHITE)  # Clear the screen
+
+        def draw(self):
+            self.screen.blit(self.bg_img, (0, 0))  # Draw background
+
+            if self.game_state == "home":
+                self.draw_home_page()
+            elif self.game_state == "play":
+                self.draw_play_page()
+            elif self.game_state == "next_game":
+                self.draw_next_game_page()
+
+        pygame.display.flip()
 
 # Run the game
 game = Game()
